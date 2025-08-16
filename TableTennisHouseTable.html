@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>טבלת בית טניס שולחן</title>
+  <style>
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      text-align: center;
+      color: #002b7f; /* כחול כהה */
+      margin-top: 30px;
+    }
+    h2 {
+      margin-top: 30px;
+      color: #002b7f;
+      border-bottom: 2px solid #002b7f;
+      padding-bottom: 5px;
+      text-align: center;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    th {
+      background-color: #002b7f;
+      color: white;
+      font-weight: bold;
+      padding: 10px;
+      border: 1px solid #000;
+    }
+    td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: center;
+    }
+    tr:nth-child(even) td {
+      background-color: #f2f2f2;
+    }
+    input[type="text"], input[type="number"] {
+      padding: 5px;
+      margin: 5px 0;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      text-align: center;
+      width: 150px;
+    }
+    button {
+      margin: 10px 0;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: #002b7f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #0040bf;
+    }
+    .hidden { display: none; }
+
+    /* מרכז את השדות והטפסים */
+    #playerCountSection, #nameInputs {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 50px;
+    }
+    #playerCountSection label, #nameInputs label {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    #namesForm {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #namesForm label {
+      width: 200px;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    @media print {
+      body { background: white; }
+      button, #playerCountSection, #nameInputs { display: none; }
+      h1 { color: black; }
+      h2 { color: black; border-bottom: 1px solid black; }
+      th { background: #ddd; color: black; }
+    }
+  </style>
+</head>
+<body>
+  <h1>טבלת בית טניס שולחן</h1>
+
+  <div id="playerCountSection">
+    <label>כמה שחקנים בבית (3–20):</label>
+    <input type="number" id="playerCount" min="3" max="20">
+    <button onclick="createNameInputs()">המשך</button>
+  </div>
+
+  <div id="nameInputs" class="hidden">
+    <h2>הכנס שמות שחקנים</h2>
+    <form id="namesForm"></form>
+    <button type="button" onclick="generateTables()">צור טבלאות</button>
+  </div>
+
+  <div id="tablesSection" class="hidden">
+    <h2>טבלת שחקנים</h2>
+    <table id="playersTable">
+      <thead>
+        <tr><th>##</th><th>שחקן</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>טבלת משחקים</h2>
+    <table id="matchesTable">
+      <thead>
+        <tr>
+          <th>סיבוב</th>
+          <th>מספרי שחקנים</th>
+          <th>שחקן 1</th>
+          <th>שחקן 2</th>
+          <th>תוצאה</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button onclick="window.print()">הדפס</button>
+  </div>
+
+  <script>
+    let playerCount = 0;
+    let players = [];
+
+    function createNameInputs() {
+      playerCount = parseInt(document.getElementById('playerCount').value);
+      if (isNaN(playerCount) || playerCount < 3 || playerCount > 20) {
+        alert("יש להזין מספר בין 3 ל-20");
+        return;
+      }
+      const form = document.getElementById('namesForm');
+      form.innerHTML = '';
+      for (let i = 1; i <= playerCount; i++) {
+        form.innerHTML += `<label>${i}: <input type="text" id="player${i}" required></label><br>`;
+      }
+      document.getElementById('nameInputs').classList.remove('hidden');
+    }
+
+    function generateTables() {
+      players = [];
+      const nameSet = new Set();
+      for (let i = 1; i <= playerCount; i++) {
+        const name = document.getElementById('player' + i).value.trim();
+        if (!name) {
+          alert("יש למלא את כל השמות");
+          return;
+        }
+        if (nameSet.has(name)) {
+          alert("אסור להזין פעמיים את אותו השם: " + name);
+          return;
+        }
+        nameSet.add(name);
+        players.push(name);
+      }
+
+      // טבלת שחקנים
+      const playersBody = document.querySelector('#playersTable tbody');
+      playersBody.innerHTML = '';
+      players.forEach((p, i) => {
+        playersBody.innerHTML += `<tr><td>${i + 1}</td><td>${p}</td></tr>`;
+      });
+
+      // טבלת משחקים
+      const matchesBody = document.querySelector('#matchesTable tbody');
+      matchesBody.innerHTML = '';
+
+      if (playerCount === 3) {
+        // הסדר המיוחד של ITTF לשלושה שחקנים
+        matchesBody.innerHTML += `<tr>
+          <td>1</td>
+          <td>2–3</td>
+          <td>${players[1]}</td>
+          <td>${players[2]}</td>
+          <td></td>
+        </tr>`;
+        matchesBody.innerHTML += `<tr>
+          <td>2</td>
+          <td>1–מפסיד</td>
+          <td>${players[0]}</td>
+          <td>מפסיד משחק 1</td>
+          <td></td>
+        </tr>`;
+        matchesBody.innerHTML += `<tr>
+          <td>3</td>
+          <td>1–מנצח</td>
+          <td>${players[0]}</td>
+          <td>מנצח משחק 1</td>
+          <td></td>
+        </tr>`;
+      } else {
+        // Round Robin לפי לוח ברגר
+        let n = playerCount;
+        let rounds = (n % 2 === 0) ? n - 1 : n;
+        let arr = Array.from({ length: n }, (_, i) => i);
+
+        for (let r = 0; r < rounds; r++) {
+          for (let i = 0; i < Math.floor(n / 2); i++) {
+            let p1 = arr[i];
+            let p2 = arr[n - 1 - i];
+            matchesBody.innerHTML += `<tr>
+              <td>${r + 1}</td>
+              <td>${p1 + 1}–${p2 + 1}</td>
+              <td>${players[p1]}</td>
+              <td>${players[p2]}</td>
+              <td></td>
+            </tr>`;
+          }
+          // סיבוב שחקנים לפי שיטת ברגר
+          arr.splice(1, 0, arr.pop());
+        }
+      }
+
+      document.getElementById('tablesSection').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
